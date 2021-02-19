@@ -1,0 +1,2 @@
+# syntax = pack.yaml
+entrypoint: ["packer-frontend"]
