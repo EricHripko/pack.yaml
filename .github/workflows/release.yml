@@ -19,4 +19,5 @@ jobs:
         with:
           push: true
           tags: erichripko/pack.yaml
+          context: .
           file: pack.yaml
