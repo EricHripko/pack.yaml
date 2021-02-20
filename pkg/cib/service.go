@@ -69,7 +69,9 @@ func (s *service) SrcState() (state llb.State, err error) {
 	if s.src == nil {
 		err = s.initSrc()
 	}
-	state, err = s.src.ToState()
+	if err == nil {
+		state, err = s.src.ToState()
+	}
 	return
 }
 
