@@ -19,7 +19,6 @@ import (
 
 const (
 	keyMultiPlatform = "multi-platform"
-	keyContextSubDir = "contextsubdir"
 )
 
 // Build the image with this frontend.
@@ -105,7 +104,8 @@ func BuildWithService(ctx context.Context, c client.Client, svc cib.Service) (*c
 					img.Config.Cmd = metadata.Command
 				} else {
 					// Find command
-					cmd, err := cib.FindCommand(ctx, ref)
+					var cmd string
+					cmd, err = cib.FindCommand(ctx, ref)
 					if err != nil {
 						return err
 					}
