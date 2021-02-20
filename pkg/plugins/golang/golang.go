@@ -18,7 +18,7 @@ import (
 )
 
 // Regular expression for detecting a Go project.
-var fileRegex = regexp.MustCompile(`(?:.*\\.go)|(?:go\\.mod)|(?:go\\.sum)`)
+var fileRegex = regexp.MustCompile(`(?:.*\.go)|(?:go\.mod)|(?:go\.sum)`)
 
 // Errors returned by the plugin.
 var (
