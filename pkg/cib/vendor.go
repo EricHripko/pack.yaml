@@ -22,7 +22,7 @@ const (
 )
 
 // Taken from https://github.com/moby/buildkit/blob/master/frontend/dockerfile/dockerfile2llb/convert.go#L1160
-// for compatiblity
+// for compatibility
 
 func parseKeyValue(env string) (string, string) {
 	parts := strings.SplitN(env, "=", 2)
