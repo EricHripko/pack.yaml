@@ -1,0 +1,3 @@
+run:
+  # Exclude tests
+  tests: false
