@@ -1,4 +1,5 @@
 # pack.yaml
+[![Go Report](https://goreportcard.com/badge/github.com/EricHripko/pack.yaml)](https://goreportcard.com/report/github.com/EricHripko/pack.yaml)
 
 `pack.yaml` (or `packer`) aims to provide a zero-effort and performant way
 to package your software with a container. It's implemented as a
