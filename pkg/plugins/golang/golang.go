@@ -161,7 +161,7 @@ func (p *Plugin) Build(ctx context.Context, platform *specs.Platform, build cib.
 		llb.AddMount(
 			dirGoBuildCache,
 			llb.Scratch(),
-			llb.AsPersistentCacheDir("go-build", llb.CacheMountShared),
+			llb.AsPersistentCacheDir("go-build", llb.CacheMountPrivate),
 		),
 		llb.AddEnv("GOCACHE", dirGoBuildCache),
 		llb.WithCustomNamef("Build %s", p.name),
@@ -171,7 +171,7 @@ func (p *Plugin) Build(ctx context.Context, platform *specs.Platform, build cib.
 		run = append(run, llb.AddMount(
 			dirGoModCache,
 			llb.Scratch(),
-			llb.AsPersistentCacheDir("go-mod", llb.CacheMountShared),
+			llb.AsPersistentCacheDir("go-mod", llb.CacheMountPrivate),
 		))
 	}
 	buildState := state.Dir(dirSrc).Run(run...).Root()
