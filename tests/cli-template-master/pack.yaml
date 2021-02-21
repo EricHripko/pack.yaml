@@ -1,0 +1,3 @@
+# syntax = erichripko/pack.yaml
+go:
+  tags: ["wireinject"]
