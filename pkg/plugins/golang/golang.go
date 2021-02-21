@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/EricHripko/pack.yaml/pkg/cib"
 	"github.com/EricHripko/pack.yaml/pkg/packer2llb"
+	"github.com/mitchellh/mapstructure"
 
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
@@ -36,10 +38,18 @@ const (
 	DMGoMod
 )
 
+// Config for the Go plugin.
+type Config struct {
+	// Build tags.
+	Tags []string
+}
+
 // Plugin for Go ecosystem.
 type Plugin struct {
 	// General configuration supplied by the user.
 	config *cib.Config
+	// Configuration for the plugin.
+	pluginConfig *Config
 	// Mode for dependency resolution.
 	dependencyMode DependencyMode
 	// Version of Go used.
@@ -52,6 +62,13 @@ type Plugin struct {
 func (p *Plugin) Detect(ctx context.Context, src client.Reference, config *cib.Config) error {
 	// Save config
 	p.config = config
+	p.pluginConfig = &Config{}
+	if other, ok := p.config.Other["go"]; ok {
+		err := mapstructure.Decode(other, p.pluginConfig)
+		if err != nil {
+			return err
+		}
+	}
 
 	// Look for go files
 	err := cib.WalkRecursive(ctx, src, func(file *fsutil.Stat) error {
@@ -127,12 +144,19 @@ func (p *Plugin) Build(ctx context.Context, platform *specs.Platform, build cib.
 		llb.WithCustomName("Create build output directory"),
 	)
 	// Build
+	args := []string{"go", "install", "-v"}
+	if len(p.pluginConfig.Tags) > 0 {
+		args = append(args, "-tags")
+		args = append(args, strings.Join(p.pluginConfig.Tags, ","))
+	}
+	args = append(args, "./...")
+
 	run := []llb.RunOption{
 		// Mount source code
 		llb.AddMount(dirSrc, src, llb.Readonly),
 		// Install executables
 		llb.AddEnv("GOBIN", dirInstall),
-		llb.Args([]string{"go", "install", "-v", "./..."}),
+		llb.Args(args),
 		// Cache build outputs
 		llb.AddMount(
 			dirGoBuildCache,
