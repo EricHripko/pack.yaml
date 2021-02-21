@@ -51,7 +51,7 @@ func (suite *golangTestSuite) TestDetectNotFound() {
 		Return(files, nil)
 
 	// Act
-	err := suite.plugin.Detect(suite.ctx, suite.src, nil)
+	err := suite.plugin.Detect(suite.ctx, suite.src, cib.NewConfig())
 
 	// Assert
 	require.Nil(suite.T(), err)
@@ -71,7 +71,7 @@ func (suite *golangTestSuite) TestDetectFoundGoSource() {
 		Return(nil, errors.New("not found"))
 
 	// Act
-	err := suite.plugin.Detect(suite.ctx, suite.src, nil)
+	err := suite.plugin.Detect(suite.ctx, suite.src, cib.NewConfig())
 
 	// Assert
 	require.Same(suite.T(), ErrUnknownDep, err)
@@ -93,7 +93,7 @@ func (suite *golangTestSuite) TestDetectGoModFails() {
 		Times(2)
 
 	// Act
-	err := suite.plugin.Detect(suite.ctx, suite.src, nil)
+	err := suite.plugin.Detect(suite.ctx, suite.src, cib.NewConfig())
 
 	// Assert
 	require.NotNil(suite.T(), err)
@@ -115,7 +115,7 @@ func (suite *golangTestSuite) TestDetectGoModIncomplete() {
 		Times(2)
 
 	// Act
-	err := suite.plugin.Detect(suite.ctx, suite.src, nil)
+	err := suite.plugin.Detect(suite.ctx, suite.src, cib.NewConfig())
 
 	// Assert
 	require.Same(suite.T(), ErrModIncomplete, err)
@@ -141,7 +141,7 @@ go 1.15
 		Times(2)
 
 	// Act
-	err := suite.plugin.Detect(suite.ctx, suite.src, nil)
+	err := suite.plugin.Detect(suite.ctx, suite.src, cib.NewConfig())
 
 	// Assert
 	require.Same(suite.T(), packer2llb.ErrActivate, err)
@@ -189,6 +189,7 @@ func (suite *golangTestSuite) TestBuildFailsFrom2() {
 	// Arrange
 	suite.plugin.version = "1.14"
 	suite.plugin.config = cib.NewConfig()
+	suite.plugin.pluginConfig = &Config{}
 
 	platform := &specs.Platform{OS: "linux", Architecture: "amd64"}
 	suite.build.EXPECT().
@@ -215,6 +216,7 @@ func (suite *golangTestSuite) TestBuildSucceeds() {
 	suite.plugin.version = "1.14"
 	suite.plugin.config = cib.NewConfig()
 	suite.plugin.config.Debug = false
+	suite.plugin.pluginConfig = &Config{}
 
 	platform := &specs.Platform{OS: "linux", Architecture: "amd64"}
 	suite.build.EXPECT().
