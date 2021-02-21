@@ -37,8 +37,8 @@ jobs:
 
       - name: Upload results
         uses: EnricoMi/publish-unit-test-result-action@v1
-          with:
-            files: unit-tests.xml
+        with:
+          files: unit-tests.xml
 
       - name: Upload coverage
         uses: codecov/codecov-action@v1
