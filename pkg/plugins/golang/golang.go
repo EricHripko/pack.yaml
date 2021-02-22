@@ -17,6 +17,7 @@ import (
 	"github.com/pkg/errors"
 	fsutil "github.com/tonistiigi/fsutil/types"
 	"golang.org/x/mod/modfile"
+	"golang.org/x/sync/errgroup"
 )
 
 // Regular expression for detecting a Go project.
@@ -29,17 +30,21 @@ var (
 )
 
 // DependencyMode describes all the supported methods for dependency resolution.
-type DependencyMode int
+type DependencyMode string
 
 const (
 	// DMUnknown represents an unrecognised dependency method.
-	DMUnknown = iota
+	DMUnknown = "unknown"
 	// DMGoMod represents a go.mod/go.sum project.
-	DMGoMod
+	DMGoMod = "modules"
 )
 
 // Config for the Go plugin.
 type Config struct {
+	// Version of Go used.
+	Version string
+	// Method for declaring dependencies.
+	DependencyMode DependencyMode
 	// Build tags.
 	Tags []string
 }
@@ -50,19 +55,24 @@ type Plugin struct {
 	config *cib.Config
 	// Configuration for the plugin.
 	pluginConfig *Config
-	// Mode for dependency resolution.
-	dependencyMode DependencyMode
-	// Version of Go used.
-	version string
 	// Name of the project.
 	name string
+}
+
+// NewPlugin creates a new Go plugin with correct defaults.
+func NewPlugin() *Plugin {
+	return &Plugin{
+		config: cib.NewConfig(),
+		pluginConfig: &Config{
+			DependencyMode: DMUnknown,
+		},
+	}
 }
 
 // Detect if this is a Go project and identify the context.
 func (p *Plugin) Detect(ctx context.Context, src client.Reference, config *cib.Config) error {
 	// Save config
 	p.config = config
-	p.pluginConfig = &Config{}
 	if other, ok := p.config.Other["go"]; ok {
 		err := mapstructure.Decode(other, p.pluginConfig)
 		if err != nil {
@@ -82,27 +92,40 @@ func (p *Plugin) Detect(ctx context.Context, src client.Reference, config *cib.C
 	}
 
 	// Identify dependency method
-	goMod, err := src.ReadFile(ctx, client.ReadRequest{Filename: "go.mod"})
-	if err == nil {
-		_, err = src.ReadFile(ctx, client.ReadRequest{Filename: "go.sum"})
-		if err == nil {
-			p.dependencyMode = DMGoMod
+	if p.pluginConfig.DependencyMode == DMUnknown {
+		goModGroup := new(errgroup.Group)
+		goModGroup.Go(func() error {
+			_, err := src.ReadFile(ctx, client.ReadRequest{Filename: "go.mod"})
+			return err
+		})
+		goModGroup.Go(func() error {
+			_, err := src.ReadFile(ctx, client.ReadRequest{Filename: "go.sum"})
+			return err
+		})
+		if err := goModGroup.Wait(); err == nil {
+			p.pluginConfig.DependencyMode = DMGoMod
 		}
 	}
 
 	// Pick up the project context from the dependency metadata
-	switch p.dependencyMode {
+	switch p.pluginConfig.DependencyMode {
 	case DMUnknown:
 		return ErrUnknownDep
 	case DMGoMod:
-		goMod, err := modfile.ParseLax("go.mod", goMod, nil)
+		data, err := src.ReadFile(ctx, client.ReadRequest{Filename: "go.mod"})
+		if err != nil {
+			return errors.Wrap(err, "fail to read go.mod")
+		}
+		goMod, err := modfile.ParseLax("go.mod", data, nil)
 		if err != nil {
 			return errors.Wrap(err, "fail to parse go.mod")
 		}
 		if goMod.Go == nil || goMod.Module == nil {
 			return ErrModIncomplete
 		}
-		p.version = goMod.Go.Version
+		if p.pluginConfig.Version == "" {
+			p.pluginConfig.Version = goMod.Go.Version
+		}
 		p.name = goMod.Module.Mod.Path
 	}
 
@@ -123,7 +146,7 @@ const (
 // Build the image for this Go project.
 func (p *Plugin) Build(ctx context.Context, platform *specs.Platform, build cib.Service) (*llb.State, *dockerfile2llb.Image, error) {
 	// Choose base image
-	base := "golang:" + p.version
+	base := "golang:" + p.pluginConfig.Version
 	state, _, err := build.From(
 		base,
 		platform,
@@ -166,7 +189,7 @@ func (p *Plugin) Build(ctx context.Context, platform *specs.Platform, build cib.
 		llb.AddEnv("GOCACHE", dirGoBuildCache),
 		llb.WithCustomNamef("Build %s", p.name),
 	}
-	if p.dependencyMode == DMGoMod {
+	if p.pluginConfig.DependencyMode == DMGoMod {
 		// Cache modules
 		run = append(run, llb.AddMount(
 			dirGoModCache,
@@ -209,5 +232,5 @@ func (p *Plugin) Build(ctx context.Context, platform *specs.Platform, build cib.
 
 func init() {
 	// Register the plugin with the frontend.
-	packer2llb.Register(&Plugin{})
+	packer2llb.Register(NewPlugin())
 }
