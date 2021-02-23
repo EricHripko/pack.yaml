@@ -33,11 +33,25 @@ func (suite *golangTestSuite) SetupTest() {
 	suite.ctx = context.Background()
 	suite.build = cib_mock.NewMockService(suite.ctrl)
 	suite.src = cib_mock.NewMockReference(suite.ctrl)
-	suite.plugin = &Plugin{}
+	suite.plugin = NewPlugin()
 }
 
 func (suite *golangTestSuite) TearDownTest() {
 	suite.ctrl.Finish()
+}
+
+func (suite *golangTestSuite) TestInvalidConfig() {
+	// Arrange
+	cfg := cib.NewConfig()
+	cfg.Other["go"] = map[string]interface{}{
+		"tags": "tag1",
+	}
+
+	// Act
+	err := suite.plugin.Detect(suite.ctx, suite.src, cfg)
+
+	// Assert
+	require.NotNil(suite.T(), err)
 }
 
 func (suite *golangTestSuite) TestDetectNotFound() {
@@ -51,7 +65,7 @@ func (suite *golangTestSuite) TestDetectNotFound() {
 		Return(files, nil)
 
 	// Act
-	err := suite.plugin.Detect(suite.ctx, suite.src, nil)
+	err := suite.plugin.Detect(suite.ctx, suite.src, cib.NewConfig())
 
 	// Assert
 	require.Nil(suite.T(), err)
@@ -68,13 +82,39 @@ func (suite *golangTestSuite) TestDetectFoundGoSource() {
 		Return(files, nil)
 	suite.src.EXPECT().
 		ReadFile(suite.ctx, gomock.Any()).
-		Return(nil, errors.New("not found"))
+		Return(nil, errors.New("not found")).
+		Times(2)
 
 	// Act
-	err := suite.plugin.Detect(suite.ctx, suite.src, nil)
+	err := suite.plugin.Detect(suite.ctx, suite.src, cib.NewConfig())
 
 	// Assert
 	require.Same(suite.T(), ErrUnknownDep, err)
+}
+
+func (suite *golangTestSuite) TestDetectGoModNotFound() {
+	// Arrange
+	req := client.ReadDirRequest{Path: "."}
+	files := []*fsutil.Stat{
+		{Path: "hello.go"},
+	}
+	suite.src.EXPECT().
+		ReadDir(suite.ctx, req).
+		Return(files, nil)
+	suite.src.EXPECT().
+		ReadFile(suite.ctx, gomock.Any()).
+		Return(nil, errors.New("not found"))
+	cfg := cib.NewConfig()
+	cfg.Other["go"] = map[string]interface{}{
+		"dependencyMode": "modules",
+	}
+
+	// Act
+	err := suite.plugin.Detect(suite.ctx, suite.src, cfg)
+
+	// Assert
+	require.NotNil(suite.T(), err)
+	require.Contains(suite.T(), err.Error(), "fail to read go.mod")
 }
 
 func (suite *golangTestSuite) TestDetectGoModFails() {
@@ -90,10 +130,10 @@ func (suite *golangTestSuite) TestDetectGoModFails() {
 	suite.src.EXPECT().
 		ReadFile(suite.ctx, gomock.Any()).
 		Return(goMod, nil).
-		Times(2)
+		Times(3)
 
 	// Act
-	err := suite.plugin.Detect(suite.ctx, suite.src, nil)
+	err := suite.plugin.Detect(suite.ctx, suite.src, cib.NewConfig())
 
 	// Assert
 	require.NotNil(suite.T(), err)
@@ -112,10 +152,10 @@ func (suite *golangTestSuite) TestDetectGoModIncomplete() {
 	suite.src.EXPECT().
 		ReadFile(suite.ctx, gomock.Any()).
 		Return(goMod, nil).
-		Times(2)
+		Times(3)
 
 	// Act
-	err := suite.plugin.Detect(suite.ctx, suite.src, nil)
+	err := suite.plugin.Detect(suite.ctx, suite.src, cib.NewConfig())
 
 	// Assert
 	require.Same(suite.T(), ErrModIncomplete, err)
@@ -138,18 +178,24 @@ go 1.15
 	suite.src.EXPECT().
 		ReadFile(suite.ctx, gomock.Any()).
 		Return(goMod, nil).
-		Times(2)
+		Times(3)
+	tags := []string{"tag1", "tag2"}
+	cfg := cib.NewConfig()
+	cfg.Other["go"] = map[string]interface{}{
+		"tags": tags,
+	}
 
 	// Act
-	err := suite.plugin.Detect(suite.ctx, suite.src, nil)
+	err := suite.plugin.Detect(suite.ctx, suite.src, cfg)
 
 	// Assert
 	require.Same(suite.T(), packer2llb.ErrActivate, err)
+	require.Equal(suite.T(), tags, suite.plugin.pluginConfig.Tags)
 }
 
 func (suite *golangTestSuite) TestBuildFailsFrom1() {
 	// Arrange
-	suite.plugin.version = "1.14"
+	suite.plugin.pluginConfig.Version = "1.14"
 
 	platform := &specs.Platform{OS: "linux", Architecture: "amd64"}
 	expected := errors.New("something went wrong")
@@ -166,7 +212,7 @@ func (suite *golangTestSuite) TestBuildFailsFrom1() {
 
 func (suite *golangTestSuite) TestBuildFailsSrc() {
 	// Arrange
-	suite.plugin.version = "1.14"
+	suite.plugin.pluginConfig.Version = "1.14"
 
 	platform := &specs.Platform{OS: "linux", Architecture: "amd64"}
 	suite.build.EXPECT().
@@ -187,8 +233,7 @@ func (suite *golangTestSuite) TestBuildFailsSrc() {
 
 func (suite *golangTestSuite) TestBuildFailsFrom2() {
 	// Arrange
-	suite.plugin.version = "1.14"
-	suite.plugin.config = cib.NewConfig()
+	suite.plugin.pluginConfig.Version = "1.14"
 
 	platform := &specs.Platform{OS: "linux", Architecture: "amd64"}
 	suite.build.EXPECT().
@@ -212,9 +257,10 @@ func (suite *golangTestSuite) TestBuildFailsFrom2() {
 
 func (suite *golangTestSuite) TestBuildSucceeds() {
 	// Arrange
-	suite.plugin.version = "1.14"
-	suite.plugin.config = cib.NewConfig()
 	suite.plugin.config.Debug = false
+	suite.plugin.pluginConfig.DependencyMode = DMGoMod
+	suite.plugin.pluginConfig.Version = "1.14"
+	suite.plugin.pluginConfig.Tags = []string{"tag1", "tag2"}
 
 	platform := &specs.Platform{OS: "linux", Architecture: "amd64"}
 	suite.build.EXPECT().
