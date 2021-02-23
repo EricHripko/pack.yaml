@@ -3,7 +3,16 @@ name: CI
 on: push
 
 jobs:
-  ci:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.37
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -16,13 +25,6 @@ jobs:
       - name: Build
         run: go build -v ./...
 
-      - name: Lint
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: v1.37
-          # Skip caching since it fails
-          skip-pkg-cache: true
-          skip-build-cache: true
       - name: Package
         uses: docker/build-push-action@v2
         with:
