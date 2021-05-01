@@ -1,4 +1,4 @@
-package cib
+package config
 
 import (
 	"testing"
@@ -8,7 +8,7 @@ import (
 
 func TestNewConfig(t *testing.T) {
 	// Act
-	cfg := NewConfig()
+	cfg := New()
 
 	// Assert
 	require.True(t, cfg.Debug)
@@ -30,7 +30,7 @@ go:
 `)
 
 	// Act
-	cfg, err := ReadConfig(data)
+	cfg, err := Read(data)
 
 	// Assert
 	require.Nil(t, err)
@@ -50,7 +50,7 @@ func TestReadConfig_InvalidYAML(t *testing.T) {
 	data := []byte("!\"%!%")
 
 	// Act
-	_, err := ReadConfig(data)
+	_, err := Read(data)
 
 	// Assert
 	require.Error(t, err)
@@ -61,7 +61,7 @@ func TestReadConfig_InvalidTypes(t *testing.T) {
 	data := []byte("debug: nope")
 
 	// Act
-	_, err := ReadConfig(data)
+	_, err := Read(data)
 
 	// Assert
 	require.Error(t, err)

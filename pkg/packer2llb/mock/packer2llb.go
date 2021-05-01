@@ -6,7 +6,8 @@ package packer2llb_mock
 
 import (
 	context "context"
-	cib "github.com/EricHripko/pack.yaml/pkg/cib"
+	cib "github.com/EricHripko/buildkit-fdk/pkg/cib"
+	config "github.com/EricHripko/pack.yaml/pkg/packer2llb/config"
 	gomock "github.com/golang/mock/gomock"
 	llb "github.com/moby/buildkit/client/llb"
 	dockerfile2llb "github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
@@ -55,7 +56,7 @@ func (mr *MockPluginMockRecorder) Build(arg0, arg1, arg2 interface{}) *gomock.Ca
 }
 
 // Detect mocks base method
-func (m *MockPlugin) Detect(arg0 context.Context, arg1 client.Reference, arg2 *cib.Config) error {
+func (m *MockPlugin) Detect(arg0 context.Context, arg1 client.Reference, arg2 *config.Config) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Detect", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)

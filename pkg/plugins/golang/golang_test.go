@@ -5,10 +5,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/EricHripko/pack.yaml/pkg/cib"
-	cib_mock "github.com/EricHripko/pack.yaml/pkg/cib/mock"
 	"github.com/EricHripko/pack.yaml/pkg/packer2llb"
+	"github.com/EricHripko/pack.yaml/pkg/packer2llb/config"
 
+	cib_mock "github.com/EricHripko/buildkit-fdk/pkg/cib/mock"
 	"github.com/golang/mock/gomock"
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
@@ -42,7 +42,7 @@ func (suite *golangTestSuite) TearDownTest() {
 
 func (suite *golangTestSuite) TestInvalidConfig() {
 	// Arrange
-	cfg := cib.NewConfig()
+	cfg := config.New()
 	cfg.Other["go"] = map[string]interface{}{
 		"tags": "tag1",
 	}
@@ -65,7 +65,7 @@ func (suite *golangTestSuite) TestDetectNotFound() {
 		Return(files, nil)
 
 	// Act
-	err := suite.plugin.Detect(suite.ctx, suite.src, cib.NewConfig())
+	err := suite.plugin.Detect(suite.ctx, suite.src, config.New())
 
 	// Assert
 	require.Nil(suite.T(), err)
@@ -86,7 +86,7 @@ func (suite *golangTestSuite) TestDetectFoundGoSource() {
 		Times(2)
 
 	// Act
-	err := suite.plugin.Detect(suite.ctx, suite.src, cib.NewConfig())
+	err := suite.plugin.Detect(suite.ctx, suite.src, config.New())
 
 	// Assert
 	require.Same(suite.T(), ErrUnknownDep, err)
@@ -104,7 +104,7 @@ func (suite *golangTestSuite) TestDetectGoModNotFound() {
 	suite.src.EXPECT().
 		ReadFile(suite.ctx, gomock.Any()).
 		Return(nil, errors.New("not found"))
-	cfg := cib.NewConfig()
+	cfg := config.New()
 	cfg.Other["go"] = map[string]interface{}{
 		"dependencyMode": "modules",
 	}
@@ -133,7 +133,7 @@ func (suite *golangTestSuite) TestDetectGoModFails() {
 		Times(3)
 
 	// Act
-	err := suite.plugin.Detect(suite.ctx, suite.src, cib.NewConfig())
+	err := suite.plugin.Detect(suite.ctx, suite.src, config.New())
 
 	// Assert
 	require.NotNil(suite.T(), err)
@@ -155,7 +155,7 @@ func (suite *golangTestSuite) TestDetectGoModIncomplete() {
 		Times(3)
 
 	// Act
-	err := suite.plugin.Detect(suite.ctx, suite.src, cib.NewConfig())
+	err := suite.plugin.Detect(suite.ctx, suite.src, config.New())
 
 	// Assert
 	require.Same(suite.T(), ErrModIncomplete, err)
@@ -180,7 +180,7 @@ go 1.15
 		Return(goMod, nil).
 		Times(3)
 	tags := []string{"tag1", "tag2"}
-	cfg := cib.NewConfig()
+	cfg := config.New()
 	cfg.Other["go"] = map[string]interface{}{
 		"tags": tags,
 	}

@@ -6,11 +6,10 @@ import (
 	"path"
 	"testing"
 
-	"github.com/EricHripko/pack.yaml/pkg/cib"
-	cib_mock "github.com/EricHripko/pack.yaml/pkg/cib/mock"
 	"github.com/EricHripko/pack.yaml/pkg/packer2llb"
 	packer2llb_mock "github.com/EricHripko/pack.yaml/pkg/packer2llb/mock"
 
+	cib_mock "github.com/EricHripko/buildkit-fdk/pkg/cib/mock"
 	"github.com/golang/mock/gomock"
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
@@ -231,7 +230,7 @@ func (suite *singleTestSuite) TestFindCommandFails() {
 	_, err := BuildWithService(suite.ctx, suite.client, suite.build)
 
 	// Assert
-	require.Same(suite.T(), cib.ErrNoCommand, err)
+	require.Same(suite.T(), errNoCommand, err)
 }
 
 func (suite *singleTestSuite) TestSucceedsImplicitCommand() {
@@ -257,7 +256,7 @@ func (suite *singleTestSuite) TestSucceedsImplicitCommand() {
 
 	ref := cib_mock.NewMockReference(suite.ctrl)
 	files := []*fsutil.Stat{
-		{Path: path.Join(cib.DirInstall, "command"), Mode: 0755},
+		{Path: path.Join(packer2llb.DirInstall, "command"), Mode: 0755},
 	}
 	ref.EXPECT().
 		ReadDir(gomock.Any(), gomock.Any()).
