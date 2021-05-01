@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/EricHripko/pack.yaml/pkg/cib"
 	"github.com/EricHripko/pack.yaml/pkg/packer2llb"
+	"github.com/EricHripko/pack.yaml/pkg/packer2llb/config"
 
+	"github.com/EricHripko/buildkit-fdk/pkg/cib"
 	"github.com/containerd/containerd/platforms"
 	"github.com/moby/buildkit/exporter/containerimage/exptypes"
 	"github.com/moby/buildkit/frontend/gateway/client"
@@ -63,7 +64,7 @@ func BuildWithService(ctx context.Context, c client.Client, svc cib.Service) (*c
 				if err != nil {
 					return err
 				}
-				metadata, err := cib.ReadConfig(dtMetadata)
+				metadata, err := config.Read(dtMetadata)
 				if err != nil {
 					return err
 				}
@@ -106,7 +107,7 @@ func BuildWithService(ctx context.Context, c client.Client, svc cib.Service) (*c
 				} else {
 					// Find command
 					var cmd string
-					cmd, err = cib.FindCommand(ctx, ref)
+					cmd, err = findCommand(ctx, ref)
 					if err != nil {
 						return err
 					}

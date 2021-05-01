@@ -5,10 +5,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/EricHripko/pack.yaml/pkg/cib"
-	cib_mock "github.com/EricHripko/pack.yaml/pkg/cib/mock"
+	"github.com/EricHripko/pack.yaml/pkg/packer2llb/config"
 	packer2llb_mock "github.com/EricHripko/pack.yaml/pkg/packer2llb/mock"
 
+	cib_mock "github.com/EricHripko/buildkit-fdk/pkg/cib/mock"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -46,7 +46,7 @@ func (suite *pluginTestSuite) TestRegister() {
 
 func (suite *pluginTestSuite) TestDetectSrcFails() {
 	// Arrange
-	cfg := &cib.Config{}
+	cfg := &config.Config{}
 	expected := errors.New("something went wrong")
 	suite.build.EXPECT().
 		Src().
@@ -61,7 +61,7 @@ func (suite *pluginTestSuite) TestDetectSrcFails() {
 
 func (suite *pluginTestSuite) TestDetectFails() {
 	// Arrange
-	cfg := &cib.Config{}
+	cfg := &config.Config{}
 	src := cib_mock.NewMockReference(suite.ctrl)
 	suite.build.EXPECT().
 		Src().
@@ -81,7 +81,7 @@ func (suite *pluginTestSuite) TestDetectFails() {
 
 func (suite *pluginTestSuite) TestDetectNotFound() {
 	// Arrange
-	cfg := &cib.Config{}
+	cfg := &config.Config{}
 	src := cib_mock.NewMockReference(suite.ctrl)
 	suite.build.EXPECT().
 		Src().
@@ -101,7 +101,7 @@ func (suite *pluginTestSuite) TestDetectNotFound() {
 
 func (suite *pluginTestSuite) TestDetectSucceeds() {
 	// Arrange
-	cfg := &cib.Config{}
+	cfg := &config.Config{}
 	src := cib_mock.NewMockReference(suite.ctrl)
 	suite.build.EXPECT().
 		Src().

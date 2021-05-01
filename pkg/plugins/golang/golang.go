@@ -6,10 +6,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/EricHripko/pack.yaml/pkg/cib"
 	"github.com/EricHripko/pack.yaml/pkg/packer2llb"
-	"github.com/mitchellh/mapstructure"
+	"github.com/EricHripko/pack.yaml/pkg/packer2llb/config"
 
+	"github.com/EricHripko/buildkit-fdk/pkg/cib"
+	"github.com/mitchellh/mapstructure"
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 	"github.com/moby/buildkit/frontend/gateway/client"
@@ -52,7 +53,7 @@ type Config struct {
 // Plugin for Go ecosystem.
 type Plugin struct {
 	// General configuration supplied by the user.
-	config *cib.Config
+	config *config.Config
 	// Configuration for the plugin.
 	pluginConfig *Config
 	// Name of the project.
@@ -62,7 +63,7 @@ type Plugin struct {
 // NewPlugin creates a new Go plugin with correct defaults.
 func NewPlugin() *Plugin {
 	return &Plugin{
-		config: cib.NewConfig(),
+		config: config.New(),
 		pluginConfig: &Config{
 			DependencyMode: DMUnknown,
 		},
@@ -70,7 +71,7 @@ func NewPlugin() *Plugin {
 }
 
 // Detect if this is a Go project and identify the context.
-func (p *Plugin) Detect(ctx context.Context, src client.Reference, config *cib.Config) error {
+func (p *Plugin) Detect(ctx context.Context, src client.Reference, config *config.Config) error {
 	// Save config
 	p.config = config
 	if other, ok := p.config.Other["go"]; ok {
@@ -214,14 +215,14 @@ func (p *Plugin) Build(ctx context.Context, platform *specs.Platform, build cib.
 	}
 	// Install the application
 	state = state.File(
-		llb.Mkdir(cib.DirInstall, 0755, llb.WithParents(true)),
+		llb.Mkdir(packer2llb.DirInstall, 0755, llb.WithParents(true)),
 		llb.WithCustomName("Create output directory"),
 	)
 	state = state.File(
 		llb.Copy(
 			buildState,
 			dirInstall,
-			cib.DirInstall,
+			packer2llb.DirInstall,
 			&llb.CopyInfo{CopyDirContentsOnly: true},
 		),
 		llb.WithCustomName("Install application(s)"),

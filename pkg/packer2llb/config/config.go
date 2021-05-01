@@ -1,4 +1,4 @@
-package cib
+package config
 
 import (
 	"github.com/mitchellh/mapstructure"
@@ -20,8 +20,8 @@ type Config struct {
 	Other map[string]interface{} `mapstructure:",remain"`
 }
 
-// NewConfig returns an instance of configuration with pre-populated defaults.
-func NewConfig() *Config {
+// New returns an instance of configuration with pre-populated defaults.
+func New() *Config {
 	return &Config{
 		Debug:      true,
 		Entrypoint: []string{},
@@ -31,8 +31,8 @@ func NewConfig() *Config {
 	}
 }
 
-// ReadConfig parses the configuration provided into a structured format.
-func ReadConfig(data []byte) (*Config, error) {
+// Read the configuration provided into a structured format.
+func Read(data []byte) (*Config, error) {
 	// Decode YAML
 	m := make(map[string]interface{})
 	if err := yaml.Unmarshal(data, m); err != nil {
@@ -40,7 +40,7 @@ func ReadConfig(data []byte) (*Config, error) {
 	}
 
 	// Map
-	config := NewConfig()
+	config := New()
 	err := mapstructure.Decode(m, config)
 	return config, err
 }
