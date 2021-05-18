@@ -88,8 +88,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/Djarvur/go-err113 v0.0.0-20200410182137-af658d038157/go.mod h1:4UJr5HIiMZrwgkSPdsjy2uOQExX/WEILpIrO9UPGuXs=
 github.com/Djarvur/go-err113 v0.1.0/go.mod h1:4UJr5HIiMZrwgkSPdsjy2uOQExX/WEILpIrO9UPGuXs=
-github.com/EricHripko/buildkit-fdk v0.0.2 h1:yhNr5nebBKZ0tg+2ERdC2yNNJqFEws2CTAHUminhfYs=
-github.com/EricHripko/buildkit-fdk v0.0.2/go.mod h1:+VXcEFOUjQeXUrEfH7P2k3Vhfqn+uyaTV2w8fJCt4cw=
+github.com/EricHripko/buildkit-fdk v0.1.2 h1:HPGR25KdGBhGh9V/eCRFo2gWi8iCo89zFIm/bGiaF/M=
+github.com/EricHripko/buildkit-fdk v0.1.2/go.mod h1:fFzx/VV3VyTTw6w7nFFsf88HJ5kwX1P61wLMcnz6Hb4=
 github.com/GoogleCloudPlatform/cloudsql-proxy v0.0.0-20191009163259-e802c2cb94ae/go.mod h1:mjwGPas4yKduTyubHvD1Atl9r1rUq8DfVy+gkVvZ+oo=
 github.com/GoogleCloudPlatform/k8s-cloud-provider v0.0.0-20190822182118-27a4ced34534/go.mod h1:iroGtC8B3tQiqtds1l+mgk/BBOrxbqjH+eUfFQYRc14=
 github.com/Masterminds/semver v1.5.0/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
