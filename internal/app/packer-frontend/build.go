@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"github.com/EricHripko/pack.yaml/pkg/packer2llb"
 	"github.com/EricHripko/pack.yaml/pkg/packer2llb/config"
@@ -31,23 +30,14 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 // perform the build.
 //nolint:gocyclo // Frontends are complex
 func BuildWithService(ctx context.Context, c client.Client, svc cib.Service) (*client.Result, error) {
-	opts := svc.GetOpts()
-
 	// Identify target platforms
 	targetPlatforms, err := svc.GetTargetPlatforms()
 	if err != nil {
 		return nil, err
 	}
-	exportMap := len(targetPlatforms) > 1
-	if v := opts[keyMultiPlatform]; v != "" {
-		b, err := strconv.ParseBool(v)
-		if err != nil {
-			return nil, errors.Errorf("invalid boolean value %s", v)
-		}
-		if !b && exportMap {
-			return nil, errors.Errorf("returning multiple target plaforms is not allowed")
-		}
-		exportMap = b
+	exportMap, err := svc.GetIsMultiPlatform()
+	if err != nil {
+		return nil, err
 	}
 	expPlatforms := &exptypes.Platforms{
 		Platforms: make([]exptypes.Platform, len(targetPlatforms)),

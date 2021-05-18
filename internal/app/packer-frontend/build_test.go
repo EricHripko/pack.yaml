@@ -34,15 +34,15 @@ func (suite *singleTestSuite) SetupTest() {
 	suite.build = cib_mock.NewMockService(suite.ctrl)
 	suite.client = cib_mock.NewMockClient(suite.ctrl)
 
-	suite.build.EXPECT().
-		GetOpts().
-		Return(map[string]string{})
 	platforms := []*specs.Platform{
 		{OS: "linux", Architecture: "amd64"},
 	}
 	suite.build.EXPECT().
 		GetTargetPlatforms().
 		Return(platforms, nil)
+	suite.build.EXPECT().
+		GetIsMultiPlatform().
+		Return(false, nil)
 }
 
 func (suite *singleTestSuite) TearDownTest() {
@@ -340,9 +340,6 @@ func (suite *multiTestSuite) TearDownTest() {
 
 func (suite *multiTestSuite) TestTargetPlatformFails() {
 	// Arrange
-	suite.build.EXPECT().
-		GetOpts().
-		Return(map[string]string{})
 	expected := errors.New("something went wrong")
 	suite.build.EXPECT().
 		GetTargetPlatforms().
@@ -355,57 +352,11 @@ func (suite *multiTestSuite) TestTargetPlatformFails() {
 	require.Same(suite.T(), expected, actual)
 }
 
-func (suite *multiTestSuite) TestParseFails() {
-	// Arrange
-	opts := map[string]string{
-		keyMultiPlatform: "invalid",
-	}
-	suite.build.EXPECT().
-		GetOpts().
-		Return(opts)
-	platforms := []*specs.Platform{
-		{OS: "linux", Architecture: "amd64"},
-		{OS: "linux", Architecture: "arm64"},
-	}
-	suite.build.EXPECT().
-		GetTargetPlatforms().
-		Return(platforms, nil)
-
-	// Act
-	_, err := BuildWithService(suite.ctx, suite.client, suite.build)
-
-	// Assert
-	require.NotNil(suite.T(), err)
-}
-
-func (suite *multiTestSuite) TestNotAllowed() {
-	// Arrange
-	opts := map[string]string{
-		keyMultiPlatform: "false",
-	}
-	suite.build.EXPECT().
-		GetOpts().
-		Return(opts)
-	platforms := []*specs.Platform{
-		{OS: "linux", Architecture: "amd64"},
-		{OS: "linux", Architecture: "arm64"},
-	}
-	suite.build.EXPECT().
-		GetTargetPlatforms().
-		Return(platforms, nil)
-
-	// Act
-	_, err := BuildWithService(suite.ctx, suite.client, suite.build)
-
-	// Assert
-	require.NotNil(suite.T(), err)
-}
-
 func (suite *multiTestSuite) TestSucceeds() {
 	// Arrange
 	suite.build.EXPECT().
-		GetOpts().
-		Return(map[string]string{})
+		GetIsMultiPlatform().
+		Return(true, nil)
 	platforms := []*specs.Platform{
 		{OS: "linux", Architecture: "amd64"},
 		{OS: "linux", Architecture: "arm64"},
