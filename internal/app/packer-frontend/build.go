@@ -17,10 +17,6 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-const (
-	keyMultiPlatform = "multi-platform"
-)
-
 // Build the image with this frontend.
 func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 	return BuildWithService(ctx, c, cib.NewService(ctx, c))
